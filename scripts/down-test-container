@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -eou pipefail
+
+export COMPOSE_PROJECT_NAME=tickets-api-test
+dir=$(dirname "$0")
+# if PORT is unset or null, then it will be set to a dummy value
+# useful when running this script from the terminal due to docker compose config file
+export POSTGRES_PORT=${POSTGRES_PORT:-5569}
+export POSTGRES_USER=${POSTGRES_USER:-jorge}
+export POSTGRES_DB=${POSTGRES_DB:-tickets}
+export POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-123456}
+export NATS_SERVER_PORT=${NATS_SERVER_PORT:-4222}
+docker compose -f "$dir"/docker-compose.test.yml down -v

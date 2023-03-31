@@ -1,5 +1,6 @@
-import { DataTypes, Sequelize } from 'sequelize';
-import { Ticket } from '@db/models';
+import { DataTypes, Op, Sequelize } from 'sequelize';
+import { Order, Ticket } from '@db/models';
+import { OrderStatus } from '@custom-types/index';
 
 export const init = (sequelize: Sequelize) => {
   Ticket.init(
@@ -24,11 +25,6 @@ export const init = (sequelize: Sequelize) => {
           return Number(this.getDataValue('price'));
         }
       },
-      userId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: 'user_id'
-      },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE
     },
@@ -37,4 +33,17 @@ export const init = (sequelize: Sequelize) => {
       tableName: 'ticket'
     }
   );
+};
+
+export const associate = () => {
+  Ticket.hasMany(Order, {
+    sourceKey: 'id',
+    foreignKey: 'ticketId',
+    scope: {
+      status: {
+        [Op.notIn]: [OrderStatus.Cancelled]
+      }
+    },
+    as: 'reservedOrders' // TODO????significa que cada vez que busque un Ticket, habrá una prop reserverdOrders
+  });
 };

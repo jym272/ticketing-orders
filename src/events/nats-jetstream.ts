@@ -17,11 +17,22 @@ import { getEnvOrFail } from '@utils/env';
 export let nc: NatsConnection | undefined;
 export let js: JetStreamClient | undefined;
 // refacotorizacion igual a la de http codes
-export enum Subjects { //TODO: one enum per service instead of one global enum, in that case arg for getProps
+
+enum OrderSubjects {
+  OrderCreated = 'orders.created'
+}
+enum TicketSubjects { //TODO: one enum per service instead of one global enum, in that case arg for getProps
   TicketCreated = 'tickets.created',
   TicketUpdated = 'tickets.updated'
 }
-const getDurableName = (subject: Subjects) => {
+export const subjects = {
+  ...OrderSubjects,
+  ...TicketSubjects
+};
+
+export type Subjects = TicketSubjects | OrderSubjects;
+
+const getDurableName = (subject: TicketSubjects) => {
   const parts = subject.split('.');
   if (!parts.length) {
     throw new Error('Subject is empty');
@@ -30,18 +41,17 @@ const getDurableName = (subject: Subjects) => {
   return upperCaseParts.join('_');
 };
 
-export type SubjectsType = Subjects;
 export let opts: ConsumerOptsBuilder; // for the subscription
 export const stream = 'tickets';
 export const subj = `tickets.*`;
 interface UniqueConsumerProps {
   durableName: string;
-  queueGroupName: SubjectsType;
-  filterSubject: SubjectsType;
+  queueGroupName: Subjects;
+  filterSubject: Subjects;
 }
 
 const getProps = () =>
-  Object.values(Subjects).map(subject => {
+  Object.values(TicketSubjects).map(subject => {
     return {
       durableName: getDurableName(subject),
       queueGroupName: subject,
@@ -128,6 +138,10 @@ const getJetStreamClient = async () => {
   return js;
 };
 
+const createJetStreamClient = async () => {
+  await getJetStreamClient();
+};
+
 export const sc = StringCodec();
 
 const monitorNatsConnectionStatus = async () => {
@@ -139,6 +153,6 @@ const monitorNatsConnectionStatus = async () => {
 };
 
 export const startJetStream = async () => {
-  await getJetStreamClient();
+  await createJetStreamClient();
   void monitorNatsConnectionStatus();
 };

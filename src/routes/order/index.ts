@@ -1,26 +1,26 @@
 import { Router } from 'express';
-import { ticketsController } from '@controllers/tickets';
+import { orderController } from '@controllers/order';
 import { commonController } from '@jym272ticketing/common';
 import { getEnvOrFail } from '@utils/env';
 import { nc } from '@events/nats-jetstream';
 import { httpStatusCodes } from '@jym272ticketing/common/dist/utils';
 const { verifyCurrentUser, requireAuth } = commonController;
-const { retrieveAllTickets, retrieveATicket, createATicket, checkAttributes, updateATicket } = ticketsController;
+const { createAOrder, getOrders, getOrder, cancelOrder } = orderController;
 const { BAD_REQUEST, OK } = httpStatusCodes;
 
 const secret = getEnvOrFail('JWT_SECRET');
-
 const authMiddleware = Router();
-authMiddleware.use(verifyCurrentUser(secret), requireAuth, checkAttributes);
+authMiddleware.use(verifyCurrentUser(secret), requireAuth);
 
-export const tickets = Router();
+export const order = Router();
 
-tickets.get('/api/tickets', retrieveAllTickets);
-tickets.get('/api/tickets/:id', retrieveATicket);
-tickets.post('/api/tickets', authMiddleware, createATicket);
-tickets.put('/api/tickets/:id', authMiddleware, updateATicket);
+order.post('/api/orders', authMiddleware, createAOrder);
+order.get('/api/orders', authMiddleware, getOrders);
+order.get('/api/orders/:id', authMiddleware, getOrder);
+order.patch('/api/orders/:id', authMiddleware, cancelOrder);
+
 //TODO: refactor, maybe common api later
-tickets.get('/api/healthz', (req, res) => {
+order.get('/api/healthz', (req, res) => {
   const ncIsClosed = nc ? nc.isClosed() : true;
   if (ncIsClosed) {
     return res.status(BAD_REQUEST).send({ status: 'error' });

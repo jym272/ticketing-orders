@@ -3,32 +3,11 @@
 set -eou pipefail
 
 dir=$(dirname "$0")
-source "$dir"/random_functions
+source "$dir"/exports
 
-port=$(get_random_port_not_used)
-export PORT=$port
-
-postgres_port=$(get_random_port_not_used)
-export POSTGRES_PORT=$postgres_port
-export POSTGRES_USER=jorge
-export POSTGRES_DB=tickets
-export POSTGRES_PASSWORD=123456
-
-export POSTGRES_HOST=localhost
-random_secret=$(get_random_secret)
-export PASSWORD_PEPPER=$random_secret
-random_secret=$(get_random_secret)
-export JWT_SECRET=$random_secret
-
-export NATS_SERVER_HOST=localhost
-nats_server_port=$(get_random_port_not_used)
-export NATS_SERVER_PORT=$nats_server_port
-
-echo -e "\e[1;32mPostgres db\e[0m"
-export COMPOSE_PROJECT_NAME=tickets-api-test
+echo -e "\e[1;32mCreating services:\e[0m"
 docker compose -f "$dir"/docker-compose.test.yml up -d
-
-export NODE_ENV=test
 bash "$dir"/test --build
+
 # TODO: cuando bajar los containers??
 #[ -z "${NODE_ENV:-}" ] && bash "$dir"/down-test-container || echo "NODE_ENV=true, containers not down"

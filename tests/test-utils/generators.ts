@@ -1,7 +1,7 @@
 import { TICKET_ATTRIBUTES } from '@utils/constants';
 import crypto from 'crypto';
 import { signJwtToken } from '@tests/test-utils/signJwtToken';
-import { Ticket, TicketAttributes } from '@custom-types/index';
+import { TicketAttributes } from '@custom-types/index';
 const { MAX_VALID_TITLE_LENGTH, MAX_INTEGER, MAX_DECIMALS } = TICKET_ATTRIBUTES;
 
 const possibleValuesInt32 = Math.pow(2, 32);
@@ -172,16 +172,44 @@ export const createACookieSession = (user: { userEmail: string; userId: number }
   return `session=${encodedSession}`;
 };
 
-export const generateValidTicketAttributes = (): TicketAttributes => {
+export const generateTicketAttributes = () => {
   return {
     title: generateRandomString(MAX_VALID_TITLE_LENGTH),
     price: Number(createAValidPrice())
   };
 };
-
-export const generateValidTicket = (userId: number = generateA32BitUnsignedInteger()): Ticket => {
+export const generateValidTicket = (
+  userId: number = generateA32BitUnsignedInteger()
+): TicketAttributes & { userId: number } => {
   return {
-    ...generateValidTicketAttributes(),
+    ...generateTicketAttributes(),
     userId
   };
+};
+
+export const generateEmail = () => {
+  return `${generateRandomString(10)}@${generateRandomString(5)}.com`;
+};
+
+// export const createUser = () => {
+//   const userId = generateA32BitUnsignedInteger();
+//   const cookie = createACookieSession({
+//     userEmail: generateEmail(),
+//     userId
+//   });
+//   return { userId, cookie };
+// };
+
+const userIdSet = new Set<number>();
+export const createUniqueUser = (): { userId: number; cookie: string } => {
+  let userId = generateA32BitUnsignedInteger();
+  while (userIdSet.has(userId)) {
+    userId = generateA32BitUnsignedInteger();
+  }
+  userIdSet.add(userId);
+  const cookie = createACookieSession({
+    userEmail: generateEmail(),
+    userId
+  });
+  return { userId, cookie };
 };

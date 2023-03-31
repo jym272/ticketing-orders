@@ -26,7 +26,6 @@ node dist/server.js &
 node_pid=$!
 
 # TODO: quizas los script de test tendrian que estart en la libreria comun
-# el servidor de nats tiene que ser incluido en el proceso de test, -> necesita un docker
 while ! nc -z localhost "$PORT"; do
   echo "Waiting for server to start..."
   if ! kill -0 $node_pid 2>/dev/null; then

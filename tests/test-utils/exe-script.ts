@@ -1,15 +1,16 @@
 import childProcess from 'child_process';
 import { promisify } from 'util';
 import { utils } from '@jym272ticketing/common';
-import { Ticket } from '@custom-types/index';
 
 const { activateLogging, log } = utils;
 
 const exec = promisify(childProcess.exec);
-
+// TODO: the logging only make ses here, other noooo
 export const runPsqlCommand = async (psqlCommand: string, logging = activateLogging()) => {
   try {
-    const { stdout, stderr } = await exec(`./scripts/run_psql "${psqlCommand}"`);
+    // escape single quote for bash script
+    const psqlCommandProc = psqlCommand.replace(/'/g, `'\\''`);
+    const { stdout, stderr } = await exec('./scripts/run_psql ' + `'${psqlCommandProc}'`);
     if (stderr && logging) log(stderr);
     if (stdout && logging) log(stdout);
     return stdout;
@@ -19,18 +20,47 @@ export const runPsqlCommand = async (psqlCommand: string, logging = activateLogg
   }
 };
 
-export const truncateTicketTable = async (logging = activateLogging()) => {
-  await runPsqlCommand('truncate table "ticket" cascade;', logging);
+export const truncateTables = async (...table: [string, ...string[]]) => {
+  const processedTables = table.map(t => `"${t}"`);
+  await runPsqlCommand(`truncate table ${processedTables.join(', ')} cascade;`);
 };
 
-export const insertIntoTicketTable = async ({ title, price, userId }: Ticket, logging = activateLogging()) => {
-  const psqlCommand = `insert into "ticket" (title, price, user_id) values ('${title}', ${price}, ${userId});`;
+export const insertIntoTable = async (
+  table: string,
+  props: Record<string, string | number>,
+  logging = activateLogging()
+) => {
+  const refactorKeys = (key: string) => {
+    const arr = key.split(/(?=[A-Z])/);
+    return arr.join('_').toLowerCase();
+  };
+  const keys = Object.keys(props).map(k => refactorKeys(k));
+  const values = Object.values(props).map(v => (typeof v === 'string' ? `'${v}'` : v));
+  const psqlCommand = `insert into "${table}" (${keys.join(', ')}) values (${values.join(', ')});`;
   await runPsqlCommand(psqlCommand, logging);
 };
 
-export const selectIdFromTicketTable = async (logging = activateLogging()) => {
-  const psqlCommand = `select json_agg(json_build_object('id', id)) from "ticket";`;
+export const insertIntoTableWithReturnJson = async <T>(
+  table: string,
+  props: Record<string, string | number>,
+  logging = activateLogging()
+) => {
+  const keys = Object.keys(props).map(k => `"${k}"`);
+  const values = Object.values(props).map(v => (typeof v === 'string' ? `'${v}'` : v));
+  const psqlCommand = `insert into "${table}" (${keys.join(', ')}) values (${values.join(
+    ', '
+  )}) returning row_to_json("${table}".*);`;
   const stdout = await runPsqlCommand(psqlCommand, logging);
-  if (!stdout) throw new Error('No stdout');
+  if (!stdout) throw new Error('No stdout returned');
+  if (logging) {
+    log('Raw stdout: ', JSON.stringify(stdout));
+  }
+  return JSON.parse(stdout) as T;
+};
+
+export const selectIdFromTable = async (table: string, logging = activateLogging()) => {
+  const psqlCommand = `select json_agg(json_build_object('id', id)) from "${table}";`;
+  const stdout = await runPsqlCommand(psqlCommand, logging);
+  if (!stdout) throw new Error('No stdout returned');
   return JSON.parse(stdout) as { id: number }[];
 };

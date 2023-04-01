@@ -23,7 +23,7 @@ export class Ticket extends Model<
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
   declare isReserved: CreationOptional<() => Promise<boolean>>;
-  // mixin is with fuilkter
+  // association in init as: 'reservedOrders', affects only mixins with '*ReservedOrders'
   declare getReservedOrders: HasManyGetAssociationsMixin<Order>;
 
   // You can also pre-declare possible inclusions, these will only be populated if you

@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { getSequelizeClient, Order, Ticket } from '@db/index';
 import { utils } from '@jym272ticketing/common';
 import { OrderStatus } from '@custom-types/index';
+import { subjects } from '@events/nats-jetstream';
+import { publish } from '@events/publishers';
 const { httpStatusCodes, throwError, parseSequelizeError } = utils;
 const { NOT_FOUND, UNAUTHORIZED, OK, INTERNAL_SERVER_ERROR } = httpStatusCodes;
 const sequelize = getSequelizeClient();
@@ -39,12 +41,13 @@ export const cancelOrderController = () => {
         new Error(`Order userId ${order.userId} does not match currentUser ${userId}`)
       );
     }
+    let seq;
     try {
       order.set({ status: OrderStatus.Cancelled });
       await order.save();
-      // TODO: if publish fail the tansaction is rollback !! it must have !!!!!
-      // publish an event saying this was cancelled TODO: publish event, maybe test this publish too???
-      return res.status(OK).json(order);
+      const pa = await publish(order, subjects.OrderCancelled);
+      seq = pa.seq;
+      return res.status(OK).json({ order, seq, message: 'Order cancelled.' });
     } catch (err) {
       const error = parseSequelizeError(
         err,

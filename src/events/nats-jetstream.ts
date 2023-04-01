@@ -1,6 +1,7 @@
 import {
   AckPolicy,
   connect,
+  consumerOpts,
   createInbox,
   DeliverPolicy,
   JetStreamClient,
@@ -13,15 +14,14 @@ import { STREAM_NOT_FOUND } from '@utils/constants';
 import { log } from '@jym272ticketing/common/dist/utils';
 import { getEnvOrFail } from '@utils/env';
 
-//exporting for the test probe
 export let nc: NatsConnection | undefined;
 export let js: JetStreamClient | undefined;
-// refacotorizacion igual a la de http codes
 
-enum OrderSubjects {
-  OrderCreated = 'orders.created'
+export enum OrderSubjects {
+  OrderCreated = 'orders.created',
+  OrderCancelled = 'orders.cancelled'
 }
-enum TicketSubjects { //TODO: one enum per service instead of one global enum, in that case arg for getProps
+enum TicketSubjects { //TODO: one enum per service instead of one global enum, in that case arg for createConsumerProps
   TicketCreated = 'tickets.created',
   TicketUpdated = 'tickets.updated'
 }
@@ -30,9 +30,10 @@ export const subjects = {
   ...TicketSubjects
 };
 
+// export type Subjects = typeof subjects[keyof typeof subjects];
 export type Subjects = TicketSubjects | OrderSubjects;
 
-const getDurableName = (subject: TicketSubjects) => {
+const getDurableName = (subject: Subjects) => {
   const parts = subject.split('.');
   if (!parts.length) {
     throw new Error('Subject is empty');
@@ -42,16 +43,27 @@ const getDurableName = (subject: TicketSubjects) => {
 };
 
 export let opts: ConsumerOptsBuilder; // for the subscription
-export const stream = 'tickets';
-export const subj = `tickets.*`;
+
+// API Streams
+export enum Streams {
+  TICKETS = 'tickets',
+  ORDERS = 'orders'
+}
+
+/* this defined ALL*/
+export const stream = Streams.ORDERS; //TODO: stream and streamSubj must be generated, doing this can allowd check if the enum is correct!"
+export const streamSubj = `${Streams.ORDERS}.*`;
+const serviceSubj = OrderSubjects;
+/**/
+
 interface UniqueConsumerProps {
   durableName: string;
   queueGroupName: Subjects;
   filterSubject: Subjects;
 }
 
-const getProps = () =>
-  Object.values(TicketSubjects).map(subject => {
+const createConsumerProps = () =>
+  Object.values(serviceSubj).map(subject => {
     return {
       durableName: getDurableName(subject),
       queueGroupName: subject,
@@ -71,17 +83,17 @@ const getNatsConnection = async () => {
 
 const verifyStream = async (jsm: JetStreamManager) => {
   try {
-    await jsm.streams.find(subj);
+    await jsm.streams.find(streamSubj);
   } catch (e) {
     if (e instanceof Error && e.message === STREAM_NOT_FOUND) {
       log(`Stream ${stream} not found, creating...`);
-      await jsm.streams.add({ name: stream, subjects: [subj] });
-      log(`Stream ${stream} with subject ${subj} CREATED`);
+      await jsm.streams.add({ name: stream, subjects: [streamSubj] });
+      log(`Stream ${stream} with subject ${streamSubj} CREATED`);
       return;
     }
     throw e;
   }
-  log(`Stream '${stream}' with subject '${subj}' FOUND`);
+  log(`Stream '${stream}' with subject '${streamSubj}' FOUND`);
 };
 
 const findConsumer = async (jsm: JetStreamManager, durableName: string) => {
@@ -113,14 +125,6 @@ const verifyConsumer = async (jsm: JetStreamManager, uniqueConsumer: UniqueConsu
   log(`Consumer with name ${durableName} FOUND`);
 };
 
-// const bindConsumer = () => {
-//   // los puedo bindear en el acto, no necesariamte acá
-//   // opts = consumerOpts();
-//   // opts.queue(queueGroupName);
-//   // opts.manualAck();
-//   // opts.bind(stream, durableName);
-// };
-
 const getJetStreamClient = async () => {
   if (js) {
     return js;
@@ -128,12 +132,12 @@ const getJetStreamClient = async () => {
   const nc = await getNatsConnection();
   const jsm = await nc.jetstreamManager();
   await verifyStream(jsm);
-  const durables = getProps();
+  const durables = createConsumerProps();
   for (const durable of durables) {
     await verifyConsumer(jsm, durable);
   }
   // puede no ser necesario acá
-  // bindConsumer();
+  // bindConsumer(); -> only for subscription
   js = nc.jetstream();
   return js;
 };
@@ -155,4 +159,35 @@ const monitorNatsConnectionStatus = async () => {
 export const startJetStream = async () => {
   await createJetStreamClient();
   void monitorNatsConnectionStatus();
+};
+
+export const getAllMessages = async (durable: string) => {
+  //     fetch(stream: string, durable: string, opts?: Partial<PullOptions>): QueuedIterator<JsMsg>;
+  const js = await getJetStreamClient();
+  const messages = js.fetch(stream, durable, { batch: 10, no_wait: true });
+  return messages;
+};
+export const getAMessage = async (durable: string) => {
+  const js = await getJetStreamClient();
+  const msg = await js.pull(stream, durable);
+  return msg;
+};
+
+const bindConsumer = () => {
+  opts = consumerOpts();
+  opts.queue('orders.created');
+  opts.manualAck();
+  opts.bind(stream, 'ORDERS_CREATED');
+};
+
+export const getASubscription = async () => {
+  if (!js) {
+    throw new Error('JetStream not initialized');
+  }
+  bindConsumer();
+  const sub = await js.subscribe('orders.created', opts);
+  return {
+    sub,
+    sc
+  };
 };

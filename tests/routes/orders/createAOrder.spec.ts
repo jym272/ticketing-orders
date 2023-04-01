@@ -1,20 +1,24 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
+  createACookieSession,
+  createUniqueUser,
+  generateA32BitUnsignedInteger,
+  generateRandomString,
+  generateTicketAttributes,
+  getSequenceDataFromNats,
+  insertIntoTableWithReturnJson,
   logFinished,
   logRunning,
   parseMessage,
-  generateRandomString,
-  createACookieSession,
-  generateA32BitUnsignedInteger,
-  truncateTables,
-  insertIntoTableWithReturnJson,
-  generateTicketAttributes,
-  createUniqueUser
+  truncateTables
 } from '@tests/test-utils';
 import { utils } from '@jym272ticketing/common';
-const { httpStatusCodes } = utils;
 import { TICKET_ATTRIBUTES } from '@utils/index';
-import { Ticket } from '@db/models';
+import { Order, Ticket } from '@db/models';
+import { OrderSubjects, Streams } from '@events/nats-jetstream';
+import { OrderStatus } from '@custom-types/index';
+
+const { httpStatusCodes } = utils;
 const { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, UNAUTHORIZED } = httpStatusCodes;
 const { MAX_VALID_TITLE_LENGTH } = TICKET_ATTRIBUTES;
 
@@ -126,14 +130,44 @@ test.describe('routes: /api/orders POST createAOrderController', () => {
     expect(message).toBe('Creating Order failed.');
     expect(response.status()).toBe(INTERNAL_SERVER_ERROR);
   });
-  test('success creating the order', async ({ request }) => {
+  test('success creating the order, a publish event is made', async ({ request }) => {
     const response = await request.post('/api/orders', {
       data: { ticketId: ticket.id },
       headers: { cookie: user1.cookie }
     });
-    const message = await parseMessage(response);
+    const { seq, message, order } = (await response.json()) as { seq: number; message: string; order: Order };
     expect(response.ok()).toBe(true);
     expect(message).toBe('Order created.');
     expect(response.status()).toBe(CREATED);
+    expect(seq).toBeGreaterThan(0);
+    // Order
+    expect(order).toBeDefined();
+    expect(order).toHaveProperty('id');
+    expect(order).toHaveProperty('userId', user1.userId);
+    expect(order).toHaveProperty('ticketId', ticket.id);
+    expect(order).toHaveProperty('status', OrderStatus.Created);
+    expect(order).toHaveProperty('expiresAt');
+    expect(order).toHaveProperty('updatedAt');
+    expect(order).toHaveProperty('createdAt');
+
+    /*Testing the publish Event*/
+    const seqData = await getSequenceDataFromNats<{ [OrderSubjects.OrderCreated]: Order }>(Streams.ORDERS, seq);
+    expect(seqData).toBeDefined();
+    expect(seqData).toHaveProperty('subject', OrderSubjects.OrderCreated);
+    expect(seqData).toHaveProperty('seq', seq);
+    expect(seqData).toHaveProperty('data');
+    expect(seqData).toHaveProperty('time'); //of the nats server arrival
+
+    /*Comparing the order with the one in the publish event*/
+    expect(seqData.data[OrderSubjects.OrderCreated]).toBeDefined();
+    const seqDataOrder = seqData.data[OrderSubjects.OrderCreated];
+
+    expect(seqDataOrder).toHaveProperty('id', order.id);
+    expect(seqDataOrder).toHaveProperty('userId', order.userId);
+    expect(seqDataOrder).toHaveProperty('ticketId', order.ticketId);
+    expect(seqDataOrder).toHaveProperty('status', order.status);
+    expect(seqDataOrder).toHaveProperty('expiresAt', order.expiresAt);
+    expect(seqDataOrder).toHaveProperty('updatedAt', order.updatedAt);
+    expect(seqDataOrder).toHaveProperty('createdAt', order.createdAt);
   });
 });

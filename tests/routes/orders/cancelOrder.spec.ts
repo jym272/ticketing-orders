@@ -4,6 +4,7 @@ import {
   generateA32BitUnsignedInteger,
   generateRandomString,
   generateTicketAttributes,
+  getSequenceDataFromNats,
   insertIntoTableWithReturnJson,
   logFinished,
   logRunning,
@@ -13,6 +14,7 @@ import {
 import { utils } from '@jym272ticketing/common';
 import { Order, Ticket } from '@db/models';
 import { OrderStatus } from '@custom-types/index';
+import { OrderSubjects, Streams } from '@events/nats-jetstream';
 
 const { httpStatusCodes } = utils;
 const { UNAUTHORIZED, INTERNAL_SERVER_ERROR, NOT_FOUND } = httpStatusCodes;
@@ -88,7 +90,8 @@ test.describe('routes: /api/orders/:id PATCH cancelOrderController user ownershi
       headers: { cookie: user1.cookie }
     });
     expect(response.ok()).toBe(true);
-    const order = (await response.json()) as Order;
+    const { seq, message, order } = (await response.json()) as { seq: number; message: string; order: Order };
+    expect(message).toBe('Order cancelled.');
     expect(order).toBeDefined();
     const { id, userId, status, expiresAt, ticketId, ticket } = order;
     expect(id).toBe(orderFromUser1.id);
@@ -103,5 +106,32 @@ test.describe('routes: /api/orders/:id PATCH cancelOrderController user ownershi
     expect(ticket?.id).toBe(ticketA.id);
     expect(ticket?.price).toBe(ticketA.price);
     expect(ticket?.title).toBe(ticketA.title);
+
+    /*Testing the publish Event*/
+    const seqData = await getSequenceDataFromNats<{ [OrderSubjects.OrderCancelled]: Order }>(Streams.ORDERS, seq);
+    expect(seqData).toBeDefined();
+    expect(seqData).toHaveProperty('subject', OrderSubjects.OrderCancelled);
+    expect(seqData).toHaveProperty('seq', seq);
+    expect(seqData).toHaveProperty('data');
+    expect(seqData).toHaveProperty('time'); //of the nats server arrival
+
+    /*Comparing the order with the one in the publish event, this order is populated with the ticket*/
+    expect(seqData.data[OrderSubjects.OrderCancelled]).toBeDefined();
+    const seqDataOrder = seqData.data[OrderSubjects.OrderCancelled];
+
+    expect(seqDataOrder).toHaveProperty('id', order.id);
+    expect(seqDataOrder).toHaveProperty('userId', order.userId);
+    expect(seqDataOrder).toHaveProperty('ticketId', order.ticketId);
+    expect(seqDataOrder).toHaveProperty('status', order.status);
+    expect(seqDataOrder).toHaveProperty('expiresAt', order.expiresAt);
+    expect(seqDataOrder).toHaveProperty('updatedAt', order.updatedAt);
+    expect(seqDataOrder).toHaveProperty('createdAt', order.createdAt);
+
+    expect(seqDataOrder).toHaveProperty('ticket');
+    expect(seqDataOrder.ticket).toHaveProperty('id', ticket?.id);
+    expect(seqDataOrder.ticket).toHaveProperty('price', ticket?.price);
+    expect(seqDataOrder.ticket).toHaveProperty('title', ticket?.title);
+    expect(seqDataOrder.ticket).toHaveProperty('updatedAt', ticket?.updatedAt);
+    expect(seqDataOrder.ticket).toHaveProperty('createdAt', ticket?.createdAt);
   });
 });

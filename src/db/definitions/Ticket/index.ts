@@ -40,10 +40,16 @@ export const associate = () => {
     sourceKey: 'id',
     foreignKey: 'ticketId',
     scope: {
+      //only affect the mixins
       status: {
         [Op.notIn]: [OrderStatus.Cancelled]
       }
     },
-    as: 'reservedOrders' // TODO????significa que cada vez que busque un Ticket, habrá una prop reserverdOrders
+    as: 'reservedOrders'
+  });
+  Ticket.hasMany(Order, {
+    sourceKey: 'id',
+    foreignKey: 'ticketId',
+    as: 'orders'
   });
 };

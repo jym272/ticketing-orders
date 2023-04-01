@@ -26,8 +26,12 @@ export const init = (sequelize: Sequelize) => {
       },
       expiresAt: {
         type: DataTypes.DATE,
-        allowNull: false
+        allowNull: false,
         // field: 'expires_at'
+        get() {
+          const expiresAt = this.getDataValue('expiresAt');
+          return expiresAt.toISOString();
+        }
       },
       ticketId: {
         type: DataTypes.INTEGER,

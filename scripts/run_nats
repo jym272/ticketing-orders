@@ -14,4 +14,5 @@ cmd=$1
 
 dir=$(dirname "$0")
 
-docker compose -f "$dir"/docker-compose.test.yml exec -it db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "$cmd" -q
+# Allow word splitting in $cmd
+docker compose -f "$dir"/docker-compose.test.yml exec -it nats-box $cmd

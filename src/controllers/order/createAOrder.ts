@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { getSequelizeClient, Order, Ticket } from '@db/index';
 import { utils } from '@jym272ticketing/common';
+import { subjects } from '@events/nats-jetstream';
+import { publish } from '@events/publishers';
 const { httpStatusCodes, throwError, parseSequelizeError } = utils;
 const { CREATED, BAD_REQUEST, INTERNAL_SERVER_ERROR } = httpStatusCodes;
 const sequelize = getSequelizeClient();
@@ -36,6 +38,7 @@ export const createAOrderController = () => {
     const currentUser = req.currentUser!;
     const userId = currentUser.jti;
 
+    let seq;
     try {
       const newOrder = await sequelize.transaction(async () => {
         const order = await Order.create({
@@ -43,12 +46,11 @@ export const createAOrderController = () => {
           expiresAt: expiration,
           ticketId: ticket.id
         });
-
-        // TODO: if publish fail the tansaction is rollback !! it must have !!!!
-        // TODO: publish an event saying this was created TODO: publish event, maybe test this publish too???
+        const pa = await publish(order, subjects.OrderCreated);
+        seq = pa.seq; // The sequence number of the message as stored in JetStream
         return order;
       });
-      return res.status(CREATED).json({ message: 'Order created.', order: newOrder });
+      return res.status(CREATED).json({ message: 'Order created.', order: newOrder, seq });
     } catch (err) {
       const error = parseSequelizeError(
         err,

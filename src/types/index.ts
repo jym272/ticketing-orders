@@ -5,13 +5,6 @@ export interface TicketAttributes {
   price: number;
 }
 
-export interface Ticket extends TicketAttributes {
-  id?: number;
-  userId?: number; // not used in this api maybe ?
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export interface JwtPayloadCustom extends JwtPayload {
   permissions: {
     authenticated: boolean;

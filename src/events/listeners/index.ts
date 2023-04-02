@@ -1,1 +1,1 @@
-export * from './tickets.created';
+export * from './tickets';

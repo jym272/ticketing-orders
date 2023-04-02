@@ -6,7 +6,7 @@ import { getSequelizeClient } from '@db/sequelize';
 
 const sequelize = getSequelizeClient();
 
-export const ticketCreatedCB = async (m: JsMsg) => {
+export const ticketCreatedListener = async (m: JsMsg) => {
   let ticket: Ticket;
   try {
     const data = JSON.parse(sc.decode(m.data)) as { [TicketSubjects.TicketCreated]: Ticket };

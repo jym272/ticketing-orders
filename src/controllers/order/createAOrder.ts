@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { getSequelizeClient, Order, Ticket } from '@db/index';
 import { utils } from '@jym272ticketing/common';
 import { subjects } from '@events/nats-jetstream';
-import { publish } from '@events/publishers';
+import { publish } from '@events/publish';
 const { httpStatusCodes, throwError, parseSequelizeError } = utils;
 const { CREATED, BAD_REQUEST, INTERNAL_SERVER_ERROR } = httpStatusCodes;
 const sequelize = getSequelizeClient();

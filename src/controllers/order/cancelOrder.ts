@@ -3,7 +3,7 @@ import { getSequelizeClient, Order, Ticket } from '@db/index';
 import { utils } from '@jym272ticketing/common';
 import { OrderStatus } from '@custom-types/index';
 import { subjects } from '@events/nats-jetstream';
-import { publish } from '@events/publishers';
+import { publish } from '@events/publish';
 const { httpStatusCodes, throwError, parseSequelizeError } = utils;
 const { NOT_FOUND, UNAUTHORIZED, OK, INTERNAL_SERVER_ERROR } = httpStatusCodes;
 const sequelize = getSequelizeClient();

@@ -20,6 +20,23 @@ export const runPsqlCommand = async (psqlCommand: string, logging = activateLogg
     throw error;
   }
 };
+
+export const runPsqlCommandWithTimeout = async (cmd: string, timeout = 10000, waiting = 250) => {
+  let res = '';
+  const startTime = Date.now();
+  while (res === '') {
+    res = await runPsqlCommand(cmd);
+    res = res.trim();
+    if (res.trim()) {
+      return res;
+    } else if (Date.now() - startTime >= timeout) {
+      throw new Error('Timeout exceeded');
+    }
+    log(`cmd: ${cmd} Waiting for ${waiting}ms before trying again. Time left: ${timeout - (Date.now() - startTime)}ms`);
+    await new Promise(resolve => setTimeout(resolve, waiting));
+  }
+};
+
 //TODO: refactor in one function runCommand
 export const runNatsCommand = async (natsCmd: string, logging = activateLogging()) => {
   try {
@@ -42,78 +59,21 @@ interface Response<T> {
   time: string;
 }
 
-// interface OrderResponse {
-//   subject: OrderSubjects;
-//   seq: number;
-//   data: {
-//     [OrderSubjects.OrderCreated]: OrderCreatedData;
-//     [OrderSubjects.OrderCancelled]: OrderCancelledData;
-//   };
-//   time: string;
-// }
-//
-// interface OrderCreatedData {
-//   expiresAt: string;
-//   status: string;
-//   id: number;
-//   userId: number;
-//   ticketId: number;
-//   updatedAt: string;
-//   createdAt: string;
-// }
-//
-// interface OrderCancelledData {
-//   // properties for order cancelled data
-// }
-/*
-usage: nats stream get [<flags>] [<stream>] [<id>]
-Retrieves a specific message from a Stream
-
-Args:
-  [<stream>]  Stream name
-  [<id>]      Message Sequence to retrieve
-
-Flags:
-  -S, --last-for=SUBJECT  Retrieves the message for a specific subject
-  -j, --json              Produce JSON output
-
- */
 export const getSequenceDataFromNats = async <T>(stream: Streams, seq: number) => {
   const res = await runNatsCommand(`nats str get ${stream} ${seq} -j`);
-
-  // RES {
-  //   "subject": "orders.created",
-  //     "seq": 2,
-  //     "data": "eyJvcmRlci5jcmVhdGVkIjp7ImV4cGlyZXNBdCI6IjIwMjMtMDQtMDFUMDY6NTk6MDguMzI5WiIsInN0YXR1cyI6ImNyZWF0ZWQiLCJpZCI6MjIwLCJ1c2VySWQiOjMxOTI4NDE2OSwidGlja2V0SWQiOjIyMCwidXBkYXRlZEF0IjoiMjAyMy0wNC0wMVQwNjo0NDowOC4zMzBaIiwiY3JlYXRlZEF0IjoiMjAyMy0wNC0wMVQwNjo0NDowOC4zMzBaIn19",
-  //     "time": "2023-04-01T06:44:08.333064065Z"
-  // }
-
   const resJson = JSON.parse(res) as Response<string>;
-  // expect resJson.subject to be 'orders.created'
-
-  // {"order.created":{"expiresAt":"2023-04-01T07:00:42.627Z","status":"created","id":226,"userId":199772815,"ticketId":226,"updatedAt":"2023-04-01T06:45:42.627Z","createdAt":"2023-04-01T06:45:42.627Z"}}
   const decodedData = Buffer.from(resJson.data, 'base64').toString('utf8');
-
   const dataJson = JSON.parse(decodedData) as T;
-
   const returnObj: Response<T> = {
     ...resJson,
     data: dataJson
   };
   return returnObj;
+};
 
-  // console.log("DATAJASON",dataJson);
-  // const order = dataJson[OrderSubjects.OrderCreated];
-  // expect(order).toBeDefined();
-  // 'order.created': {
-  //   expiresAt: '2023-04-01T07:04:44.930Z',
-  //     status: 'created',
-  //     id: 228,
-  //     userId: 1103276887,
-  //     ticketId: 228,
-  //     updatedAt: '2023-04-01T06:49:44.930Z',
-  //     createdAt: '2023-04-01T06:49:44.930Z'
-  // }
+export const publishToSubject = async <T>(subject: Subjects, data: T) => {
+  const dataStr = JSON.stringify(data);
+  await runNatsCommand(`nats pub ${subject} ${dataStr}`);
 };
 
 export const truncateTables = async (...table: [string, ...string[]]) => {

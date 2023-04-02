@@ -13,8 +13,11 @@ void (async () => {
     await startJetStream();
     await startSetup(server);
     server.listen(PORT, () => successConnectionMsg(`${rocketEmoji} Server is running on port ${PORT}`));
-    void subscribe(subjects.OrderCreated, ticketListener);
-    void subscribe(subjects.OrderCancelled, ticketListener);
+    //TODO: test wit nats the subscriber, simplemente pushear con nats a los subscribers
+    // luego rebbiciar que en efecto el msg sez fue procesado -> ack
+    // logs red and green and yellow with chalk
+    void subscribe(subjects.TicketCreated, ticketListener);
+    void subscribe(subjects.TicketUpdated, ticketListener);
   } catch (error) {
     log(error);
     process.exitCode = 1;

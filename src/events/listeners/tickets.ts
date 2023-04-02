@@ -42,7 +42,7 @@ const upsertTicket = async (m: JsMsg, ticket: Ticket) => {
 
 export const ticketListener = async (m: JsMsg) => {
   if (m.subject !== subjects.TicketCreated && m.subject !== subjects.TicketUpdated) {
-    log('Wrong subject', m.subject);
+    log('Wrong subject', m.subject); // TODO: this must be for every listeners
     m.term();
     return;
   }

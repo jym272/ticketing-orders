@@ -15,10 +15,9 @@ import {
 import { utils } from '@jym272ticketing/common';
 import { TICKET_ATTRIBUTES } from '@utils/index';
 import { Order, Ticket } from '@db/models';
-import { OrderStatus } from '@custom-types/index';
 import { OrderSubjects, Streams } from '@jym272ticketing/common/dist/events';
 
-const { httpStatusCodes } = utils;
+const { httpStatusCodes, OrderStatus } = utils;
 const { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, UNAUTHORIZED } = httpStatusCodes;
 const { MAX_VALID_TITLE_LENGTH } = TICKET_ATTRIBUTES;
 

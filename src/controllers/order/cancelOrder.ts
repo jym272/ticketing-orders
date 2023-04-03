@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import { getSequelizeClient, Order, Ticket } from '@db/index';
 import { utils } from '@jym272ticketing/common';
-import { OrderStatus } from '@custom-types/index';
 import { publish, subjects } from '@jym272ticketing/common/dist/events';
-const { httpStatusCodes, throwError, parseSequelizeError } = utils;
+const { httpStatusCodes, throwError, parseSequelizeError, OrderStatus } = utils;
 const { NOT_FOUND, UNAUTHORIZED, OK, INTERNAL_SERVER_ERROR } = httpStatusCodes;
 const sequelize = getSequelizeClient();
 

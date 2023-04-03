@@ -9,7 +9,7 @@ import {
   Op
 } from 'sequelize';
 import { Order } from '@db/models';
-import { OrderStatus } from '@custom-types/index';
+import { OrderStatus } from '@jym272ticketing/common/dist/utils';
 
 export class Ticket extends Model<
   // eslint-disable-next-line no-use-before-define -- circular dependency allowed

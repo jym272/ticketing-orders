@@ -1,6 +1,6 @@
 import { DataTypes, Op, Sequelize } from 'sequelize';
 import { Order, Ticket } from '@db/models';
-import { OrderStatus } from '@custom-types/index';
+import { OrderStatus } from '@jym272ticketing/common/dist/utils';
 
 export const init = (sequelize: Sequelize) => {
   Ticket.init(

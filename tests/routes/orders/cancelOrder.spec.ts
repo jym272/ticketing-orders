@@ -13,10 +13,9 @@ import {
 } from '@tests/test-utils';
 import { utils } from '@jym272ticketing/common';
 import { Order, Ticket } from '@db/models';
-import { OrderStatus } from '@custom-types/index';
 import { OrderSubjects, Streams } from '@jym272ticketing/common/dist/events';
 
-const { httpStatusCodes } = utils;
+const { httpStatusCodes, OrderStatus } = utils;
 const { UNAUTHORIZED, INTERNAL_SERVER_ERROR, NOT_FOUND } = httpStatusCodes;
 
 // eslint-disable-next-line no-empty-pattern -- because we need to pass only the testInfo

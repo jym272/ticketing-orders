@@ -1,6 +1,6 @@
 import { CreationOptional, ForeignKey, InferAttributes, InferCreationAttributes, Model, NonAttribute } from 'sequelize';
-import { OrderStatus } from '@custom-types/index';
 import { Ticket } from '@db/models';
+import { OrderStatus } from '@jym272ticketing/common/dist/utils';
 
 // eslint-disable-next-line no-use-before-define -- circular dependency allowed
 export class Order extends Model<InferAttributes<Order>, InferCreationAttributes<Order>> {

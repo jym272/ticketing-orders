@@ -20,7 +20,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@jym272ticketing/common": "1.0.42",
+    "@jym272ticketing/common": "^1.0.42",
     "@playwright/test": "^1.29.2",
     "@swc/cli": "^0.1.59",
     "@swc/core": "^1.3.24",

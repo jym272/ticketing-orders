@@ -11,19 +11,15 @@ const PORT = getEnvOrFail('PORT');
 
 void (async () => {
   try {
-    //all the streams related to this api in subscrip and publish
     await startJetStream({
       streams: [Streams.ORDERS, Streams.TICKETS],
       nats: {
-        url: `nats://${getEnvOrFail('NATS_SERVER_HOST')}:${getEnvOrFail('NATS_SERVER_PORT')}`,
-        maxReconnectAttempts: 5
+        url: `nats://${getEnvOrFail('NATS_SERVER_HOST')}:${getEnvOrFail('NATS_SERVER_PORT')}`
       }
     });
     await startSetup(server);
     server.listen(PORT, () => successConnectionMsg(`${rocketEmoji} Server is running on port ${PORT}`));
-    //TODO: test wit nats the subscriber, simplemente pushear con nats a los subscribers
-    // luego rebbiciar que en efecto el msg sez fue procesado -> ack
-    // logs red and green and yellow with chalk
+    // TODO: logs red and green and yellow with chalk
     void subscribe(subjects.TicketCreated, ticketListener);
     void subscribe(subjects.TicketUpdated, ticketListener);
   } catch (error) {

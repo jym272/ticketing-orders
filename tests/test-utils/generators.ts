@@ -1,7 +1,6 @@
 import { TICKET_ATTRIBUTES } from '@utils/constants';
 import crypto from 'crypto';
 import { signJwtToken } from '@tests/test-utils/signJwtToken';
-import { TicketAttributes } from '@custom-types/index';
 const { MAX_VALID_TITLE_LENGTH, MAX_INTEGER, MAX_DECIMALS } = TICKET_ATTRIBUTES;
 
 const possibleValuesInt32 = Math.pow(2, 32);
@@ -178,27 +177,10 @@ export const generateTicketAttributes = () => {
     price: Number(createAValidPrice())
   };
 };
-export const generateValidTicket = (
-  userId: number = generateA32BitUnsignedInteger()
-): TicketAttributes & { userId: number } => {
-  return {
-    ...generateTicketAttributes(),
-    userId
-  };
-};
 
 export const generateEmail = () => {
   return `${generateRandomString(10)}@${generateRandomString(5)}.com`;
 };
-
-// export const createUser = () => {
-//   const userId = generateA32BitUnsignedInteger();
-//   const cookie = createACookieSession({
-//     userEmail: generateEmail(),
-//     userId
-//   });
-//   return { userId, cookie };
-// };
 
 const userIdSet = new Set<number>();
 export const createUniqueUser = (): { userId: number; cookie: string } => {

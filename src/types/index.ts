@@ -1,8 +1,3 @@
-export interface TicketAttributes {
-  title: string;
-  price: number;
-}
-
 //TODO: maybe the common controller needs this too
 export enum OrderStatus {
   // When the order has been created, but the ticket it is trying to order has not been reserved

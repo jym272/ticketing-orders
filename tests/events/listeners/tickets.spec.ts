@@ -9,7 +9,7 @@ import {
   truncateTables
 } from '@tests/test-utils';
 import { Ticket } from '@db/models';
-import { subjects } from '@events/nats-jetstream';
+import { subjects } from '@jym272ticketing/common/dist/events';
 
 // eslint-disable-next-line no-empty-pattern -- because we need to pass only the testInfo
 test.beforeEach(({}, testInfo) => logRunning(testInfo));

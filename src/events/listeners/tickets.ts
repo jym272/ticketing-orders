@@ -1,8 +1,8 @@
 import { JsMsg } from 'nats';
 import { Ticket } from '@db/models';
-import { sc, subjects, TicketSubjects } from '@events/nats-jetstream';
 import { log } from '@jym272ticketing/common/dist/utils';
 import { getSequelizeClient } from '@db/sequelize';
+import { sc, subjects, TicketSubjects } from '@jym272ticketing/common/dist/events';
 
 const sequelize = getSequelizeClient();
 

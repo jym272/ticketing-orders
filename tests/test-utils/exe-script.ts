@@ -1,8 +1,8 @@
 import childProcess from 'child_process';
 import { promisify } from 'util';
 import { utils } from '@jym272ticketing/common';
-import { Streams, Subjects } from '@events/nats-jetstream';
-
+import { Subjects } from '@jym272ticketing/common/dist/types';
+import { Streams } from '@jym272ticketing/common/dist/events';
 const { activateLogging, log } = utils;
 
 const exec = promisify(childProcess.exec);

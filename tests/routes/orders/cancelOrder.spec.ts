@@ -14,7 +14,7 @@ import {
 import { utils } from '@jym272ticketing/common';
 import { Order, Ticket } from '@db/models';
 import { OrderStatus } from '@custom-types/index';
-import { OrderSubjects, Streams } from '@events/nats-jetstream';
+import { OrderSubjects, Streams } from '@jym272ticketing/common/dist/events';
 
 const { httpStatusCodes } = utils;
 const { UNAUTHORIZED, INTERNAL_SERVER_ERROR, NOT_FOUND } = httpStatusCodes;

@@ -1,19 +1,6 @@
-import { JwtPayload } from 'jsonwebtoken';
-
 export interface TicketAttributes {
   title: string;
   price: number;
-}
-
-export interface JwtPayloadCustom extends JwtPayload {
-  permissions: {
-    authenticated: boolean;
-  };
-  exp: number;
-  iss: string;
-  sub: string;
-  aud: string | string[];
-  jti: string;
 }
 
 //TODO: maybe the common controller needs this too

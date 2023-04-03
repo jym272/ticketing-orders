@@ -37,4 +37,11 @@ test.describe('routes: utils', () => {
     expect(message).toBe('Not Found.');
     expect(response.status()).toBe(httpStatusCodes.NOT_FOUND);
   });
+  test('get api healthz route, success if nats is connected', async ({ request }) => {
+    const response = await request.get('/api/healthz');
+    const { status } = (await response.json()) as { status: 'ok' | 'error' };
+    expect(response.ok()).toBe(true);
+    expect(status).toBe('ok');
+    expect(response.status()).toBe(httpStatusCodes.OK);
+  });
 });

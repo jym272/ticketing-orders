@@ -22,6 +22,8 @@ export class Ticket extends Model<
   declare price: number;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+  // is not versioning this Model, is storing the version of the ticket in Tickets Service ->this is actually versioning
+  declare version: number;
   declare isReserved: CreationOptional<() => Promise<boolean>>;
   // association in init as: 'reservedOrders', affects only mixins with '*ReservedOrders'
   declare getReservedOrders: HasManyGetAssociationsMixin<Order>;

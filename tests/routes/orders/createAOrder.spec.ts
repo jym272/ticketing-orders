@@ -89,7 +89,7 @@ test.describe('routes: /api/orders POST createAOrderController ticket exists, an
   let ticket: Ticket;
   test.beforeAll(async () => {
     await truncateTables('ticket', 'order');
-    ticket = await insertIntoTableWithReturnJson('ticket', generateTicketAttributes());
+    ticket = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
     await insertIntoTableWithReturnJson('order', {
       userId: user1.userId,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
@@ -112,7 +112,7 @@ test.describe('routes: /api/orders POST createAOrderController', () => {
   let ticket: Ticket;
   test.beforeAll(async () => {
     await truncateTables('ticket', 'order');
-    ticket = await insertIntoTableWithReturnJson('ticket', generateTicketAttributes());
+    ticket = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
   });
 
   test('failed because of userId invalid in cookie', async ({ request }) => {

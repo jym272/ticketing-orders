@@ -38,9 +38,9 @@ test.describe('routes: /api/orders GET getOrdersController 3 tickets 2 owners', 
   test.beforeAll(async () => {
     await truncateTables('ticket', 'order');
     /*Tickets*/
-    ticketA = await insertIntoTableWithReturnJson('ticket', generateTicketAttributes());
-    ticketB = await insertIntoTableWithReturnJson('ticket', generateTicketAttributes());
-    ticketC = await insertIntoTableWithReturnJson('ticket', generateTicketAttributes());
+    ticketA = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
+    ticketB = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
+    ticketC = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
 
     /*Orders*/
     orderA = await insertIntoTableWithReturnJson('order', {

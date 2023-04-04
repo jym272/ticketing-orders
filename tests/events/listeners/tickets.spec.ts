@@ -28,12 +28,12 @@ test.describe('listener: ticketListener ', () => {
     const { title, price } = generateTicketAttributes();
 
     await publishToSubject(subjects.TicketCreated, {
-      [subjects.TicketCreated]: { id, title, price }
+      [subjects.TicketCreated]: { id, title, price, version: 0 }
     });
 
     //retrieve the ticket directly from the db, the subscriber can be taking some time to process the event
     const res = await runPsqlCommandWithTimeout(
-      `select jsonb_build_object('id', id, 'title', title, 'price', price) from "ticket" where id=${id}`
+      `select jsonb_build_object('id', id, 'title', title, 'price', price, 'version', version) from "ticket" where id=${id}`
     );
     if (!res) {
       //actually the timeout force to throw an error, but ts thinks is resolved undefined because of the waiting
@@ -43,17 +43,18 @@ test.describe('listener: ticketListener ', () => {
     expect(ticket.id).toBe(id);
     expect(ticket.title).toBe(title);
     expect(ticket.price).toBe(price);
+    expect(ticket.version).toBe(0);
   });
 
   test('subject tickets.updated update Ticket already in db', async () => {
     const { title: newTitle, price: newPrice } = generateTicketAttributes();
 
     await publishToSubject(subjects.TicketUpdated, {
-      [subjects.TicketUpdated]: { id, title: newTitle, price: newPrice }
+      [subjects.TicketUpdated]: { id, title: newTitle, price: newPrice, version: 1 }
     });
 
     const res = await runPsqlCommandWithTimeout(
-      `select jsonb_build_object('id', id, 'title', title, 'price', price) from "ticket" where price=${newPrice} and title='${newTitle}'`
+      `select jsonb_build_object('id', id, 'title', title, 'price', price, 'version', version) from "ticket" where price=${newPrice} and title='${newTitle}'`
     );
     if (!res) {
       throw new Error('No result');
@@ -62,5 +63,7 @@ test.describe('listener: ticketListener ', () => {
     expect(ticket.id).toBe(id);
     expect(ticket.title).toBe(newTitle);
     expect(ticket.price).toBe(newPrice);
+    expect(ticket.version).toBe(1);
   });
+  // create test with various versino and time handlerses
 });

@@ -25,6 +25,10 @@ export const init = (sequelize: Sequelize) => {
           return Number(this.getDataValue('price'));
         }
       },
+      version: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE
     },

@@ -10,12 +10,31 @@ const upsertTicket = async (m: JsMsg, ticket: Ticket) => {
   try {
     // the first time that a tk arrives, it is created in the DB, but consulting first the versioning
     // so first retreieve the version of the ticket in the DB, if it exsits
+    const tk = await Ticket.findByPk(ticket.id, { attributes: ['version'] });
+    let version = 0;
+    if (tk) {
+      log('TK', tk.version);
+      log('TK', ticket.version);
+      if (tk.version >= ticket.version) {
+        log('TK', 'Ticket version is not greater than the one in the DB');
+        m.ack();
+        return;
+      }
+      if (tk.version + 1 !== ticket.version) {
+        log('TK', 'Ticket version is not consecutive');
+        m.nak(2000);
+        return;
+      }
+      log('TK', 'Ticket version is consecutive');
+      version = ticket.version;
+    }
     m.working();
     const upsertTk = await sequelize.transaction(async () => {
       return await Ticket.upsert({
         id: ticket.id,
         title: ticket.title,
-        price: ticket.price
+        price: ticket.price,
+        version
       });
     });
     log('NEWTK', upsertTk[0]);

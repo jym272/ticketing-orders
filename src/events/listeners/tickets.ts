@@ -8,6 +8,8 @@ const sequelize = getSequelizeClient();
 
 const upsertTicket = async (m: JsMsg, ticket: Ticket) => {
   try {
+    // the first time that a tk arrives, it is created in the DB, but consulting first the versioning
+    // so first retreieve the version of the ticket in the DB, if it exsits
     m.working();
     const upsertTk = await sequelize.transaction(async () => {
       return await Ticket.upsert({

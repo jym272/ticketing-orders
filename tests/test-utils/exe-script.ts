@@ -6,7 +6,6 @@ import { Streams } from '@jym272ticketing/common/dist/events';
 const { activateLogging, log } = utils;
 
 const exec = promisify(childProcess.exec);
-// TODO: the logging only make ses here, other noooo
 export const runPsqlCommand = async (psqlCommand: string, logging = activateLogging()) => {
   try {
     // escape single quote for bash script
@@ -21,11 +20,16 @@ export const runPsqlCommand = async (psqlCommand: string, logging = activateLogg
   }
 };
 
-export const runPsqlCommandWithTimeout = async (cmd: string, timeout = 10000, waiting = 250) => {
+export const runPsqlCommandWithTimeout = async (
+  cmd: string,
+  timeout = 10000,
+  waiting = 250,
+  logging = activateLogging()
+) => {
   let res = '';
   const startTime = Date.now();
   while (res === '') {
-    res = await runPsqlCommand(cmd);
+    res = await runPsqlCommand(cmd, logging);
     res = res.trim();
     if (res.trim()) {
       return res;
@@ -37,7 +41,6 @@ export const runPsqlCommandWithTimeout = async (cmd: string, timeout = 10000, wa
   }
 };
 
-//TODO: refactor in one function runCommand
 export const runNatsCommand = async (natsCmd: string, logging = activateLogging()) => {
   try {
     // escape single quote for bash script
@@ -81,21 +84,6 @@ export const truncateTables = async (...table: [string, ...string[]]) => {
   await runPsqlCommand(`truncate table ${processedTables.join(', ')} cascade;`);
 };
 
-export const insertIntoTable = async (
-  table: string,
-  props: Record<string, string | number>,
-  logging = activateLogging()
-) => {
-  const refactorKeys = (key: string) => {
-    const arr = key.split(/(?=[A-Z])/);
-    return arr.join('_').toLowerCase();
-  };
-  const keys = Object.keys(props).map(k => refactorKeys(k));
-  const values = Object.values(props).map(v => (typeof v === 'string' ? `'${v}'` : v));
-  const psqlCommand = `insert into "${table}" (${keys.join(', ')}) values (${values.join(', ')});`;
-  await runPsqlCommand(psqlCommand, logging);
-};
-
 export const insertIntoTableWithReturnJson = async <T>(
   table: string,
   props: Record<string, string | number>,
@@ -112,11 +100,4 @@ export const insertIntoTableWithReturnJson = async <T>(
     log('Raw stdout: ', JSON.stringify(stdout));
   }
   return JSON.parse(stdout) as T;
-};
-
-export const selectIdFromTable = async (table: string, logging = activateLogging()) => {
-  const psqlCommand = `select json_agg(json_build_object('id', id)) from "${table}";`;
-  const stdout = await runPsqlCommand(psqlCommand, logging);
-  if (!stdout) throw new Error('No stdout returned');
-  return JSON.parse(stdout) as { id: number }[];
 };

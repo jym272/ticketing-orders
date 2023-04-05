@@ -20,6 +20,7 @@ export PORT=$port
 #nats
 export NATS_SERVER_HOST=localhost
 export NATS_SERVER_PORT=$nats_server_port
+export NACK_DELAY_MS=1000
 
 #postgres
 export POSTGRES_DB=orders

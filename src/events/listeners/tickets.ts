@@ -1,10 +1,11 @@
 import { JsMsg } from 'nats';
 import { Ticket } from '@db/models';
-import { log } from '@jym272ticketing/common/dist/utils';
+import { log, getEnvOrFail } from '@jym272ticketing/common/dist/utils';
 import { getSequelizeClient } from '@db/sequelize';
 import { sc, subjects, TicketSubjects } from '@jym272ticketing/common/dist/events';
 
 const sequelize = getSequelizeClient();
+const nackDelay = getEnvOrFail('NACK_DELAY_MS');
 
 const upsertTicket = async (m: JsMsg, ticket: Ticket) => {
   try {
@@ -22,7 +23,7 @@ const upsertTicket = async (m: JsMsg, ticket: Ticket) => {
       }
       if (tk.version + 1 !== ticket.version) {
         log('TK', 'Ticket version is not consecutive');
-        m.nak(2000);
+        m.nak(Number(nackDelay));
         return;
       }
       log('TK', 'Ticket version is consecutive');
@@ -42,7 +43,7 @@ const upsertTicket = async (m: JsMsg, ticket: Ticket) => {
     log('CREATED OR UPDATED:', upsertTk[1]);
   } catch (err) {
     log('Error creating ticket', err);
-    m.nak(2000);
+    m.nak(Number(nackDelay));
     return;
   }
   // console.log(`[${m.seq}]: ${sc.decode(m.data)}`);

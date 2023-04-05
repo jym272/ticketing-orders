@@ -24,6 +24,7 @@ test.afterEach(({}, testInfo) => logFinished(testInfo));
   has finished to process the events. If the test fails increase the graceTime
  */
 const graceTime = 100;
+
 test.describe('listener: ticketListener ticket created and updated events ', () => {
   let id: number;
   test.beforeAll(async () => {
@@ -90,12 +91,15 @@ test.describe('listener: Ticket version is not greater than the one in the DB', 
       .fill(0)
       .map(() => Number(createAValidPrice()));
 
-    for await (const [index, price] of prices.entries()) {
-      // created and updated listener use upsert method in Table
-      await publishToSubject(subjects.TicketCreated, {
-        [subjects.TicketCreated]: { id, title, price, version: index }
-      });
-    }
+    await publishToSubject(subjects.TicketCreated, {
+      [subjects.TicketCreated]: { id, title, price: prices[0], version: 0 }
+    });
+    await publishToSubject(subjects.TicketUpdated, {
+      [subjects.TicketUpdated]: { id, title, price: prices[1], version: 1 }
+    });
+    await publishToSubject(subjects.TicketUpdated, {
+      [subjects.TicketUpdated]: { id, title, price: prices[2], version: 2 }
+    });
     // the messages are acknowledged by the listener, but the listener does not process them
     await publishToSubject(subjects.TicketUpdated, {
       [subjects.TicketUpdated]: { id, title, price: prices[0], version: 0 }
@@ -115,8 +119,8 @@ test.describe('listener: Ticket version is not greater than the one in the DB', 
     const ticket = JSON.parse(res) as Ticket;
     expect(ticket.id).toBe(id);
     expect(ticket.title).toBe(title);
-    expect(ticket.price).toBe(prices[prices.length - 1]);
-    expect(ticket.version).toBe(prices.length - 1);
+    expect(ticket.price).toBe(prices[2]);
+    expect(ticket.version).toBe(2);
   });
 });
 
@@ -135,8 +139,8 @@ test.describe('listener: Ticket version is not consecutive', () => {
       .fill(0)
       .map(() => Number(createAValidPrice()));
 
-    await publishToSubject(subjects.TicketUpdated, {
-      [subjects.TicketUpdated]: { id, title, price: prices[0], version: 0 }
+    await publishToSubject(subjects.TicketCreated, {
+      [subjects.TicketCreated]: { id, title, price: prices[0], version: 0 }
     });
     await publishToSubject(subjects.TicketUpdated, {
       [subjects.TicketUpdated]: { id, title, price: prices[1], version: 1 }
@@ -146,8 +150,10 @@ test.describe('listener: Ticket version is not consecutive', () => {
     await publishToSubject(subjects.TicketUpdated, {
       [subjects.TicketUpdated]: { id, title, price: prices[3], version: 3 }
     });
+
     log(`waiting ${graceTime} ms for the listener to process the events`);
     await new Promise(resolve => setTimeout(resolve, graceTime));
+
     let res = await runPsqlCommandWithTimeout(
       `select jsonb_build_object('id', id, 'title', title, 'price', price, 'version', version) from "ticket" where id=${id}`
     );

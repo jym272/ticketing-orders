@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
-import {
+import { utils } from '@jym272ticketing/common';
+import { Order, Ticket } from '@db/models';
+
+const {
+  httpStatusCodes,
   createUniqueUser,
   generateTicketAttributes,
   insertIntoTableWithReturnJson,
@@ -7,11 +11,7 @@ import {
   logRunning,
   parseMessage,
   truncateTables
-} from '@tests/test-utils';
-import { utils } from '@jym272ticketing/common';
-import { Order, Ticket } from '@db/models';
-
-const { httpStatusCodes } = utils;
+} = utils;
 const { UNAUTHORIZED } = httpStatusCodes;
 
 // eslint-disable-next-line no-empty-pattern -- because we need to pass only the testInfo

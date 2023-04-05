@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import {
+import { utils, events } from '@jym272ticketing/common';
+import { TICKET_ATTRIBUTES } from '@utils/index';
+import { Order, Ticket } from '@db/models';
+const { OrderSubjects, Streams } = events;
+
+const {
+  httpStatusCodes,
+  OrderStatus,
   createACookieSession,
   createUniqueUser,
   generateA32BitUnsignedInteger,
@@ -11,13 +18,7 @@ import {
   logRunning,
   parseMessage,
   truncateTables
-} from '@tests/test-utils';
-import { utils } from '@jym272ticketing/common';
-import { TICKET_ATTRIBUTES } from '@utils/index';
-import { Order, Ticket } from '@db/models';
-import { OrderSubjects, Streams } from '@jym272ticketing/common/dist/events';
-
-const { httpStatusCodes, OrderStatus } = utils;
+} = utils;
 const { BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR, UNAUTHORIZED } = httpStatusCodes;
 const { MAX_VALID_TITLE_LENGTH } = TICKET_ATTRIBUTES;
 

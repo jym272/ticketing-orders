@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test';
-import {
+import { utils, events } from '@jym272ticketing/common';
+import { Order, Ticket } from '@db/models';
+
+const {
+  httpStatusCodes,
+  OrderStatus,
   createUniqueUser,
   generateA32BitUnsignedInteger,
   generateRandomString,
@@ -10,12 +15,8 @@ import {
   logRunning,
   parseMessage,
   truncateTables
-} from '@tests/test-utils';
-import { utils } from '@jym272ticketing/common';
-import { Order, Ticket } from '@db/models';
-import { OrderSubjects, Streams } from '@jym272ticketing/common/dist/events';
-
-const { httpStatusCodes, OrderStatus } = utils;
+} = utils;
+const { OrderSubjects, Streams } = events;
 const { UNAUTHORIZED, INTERNAL_SERVER_ERROR, NOT_FOUND } = httpStatusCodes;
 
 // eslint-disable-next-line no-empty-pattern -- because we need to pass only the testInfo
@@ -92,11 +93,14 @@ test.describe('routes: /api/orders/:id PATCH cancelOrderController user ownershi
     const { seq, message, order } = (await response.json()) as { seq: number; message: string; order: Order };
     expect(message).toBe('Order cancelled.');
     expect(order).toBeDefined();
-    const { id, userId, status, expiresAt, ticketId, ticket } = order;
+    const { id, userId, status, expiresAt, ticketId, ticket, version } = order;
     expect(id).toBe(orderFromUser1.id);
     expect(userId).toBe(orderFromUser1.userId);
     expect(status).not.toBe(orderFromUser1.status);
     expect(status).toBe(OrderStatus.Cancelled);
+    expect(version).not.toBe(orderFromUser1.version);
+    expect(version).toBe(1);
+    expect(version).toBe(orderFromUser1.version + 1);
     expect(new Date(expiresAt)).toStrictEqual(new Date(orderFromUser1.expiresAt));
     expect(ticketId).toBe(orderFromUser1.ticketId);
     expect(ticketId).toBe(ticketA.id);

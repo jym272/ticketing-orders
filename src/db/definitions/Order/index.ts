@@ -9,13 +9,11 @@ export const init = (sequelize: Sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: false,
         primaryKey: true,
-        autoIncrement: true,
-        field: 'id'
+        autoIncrement: true
       },
       userId: {
         type: DataTypes.INTEGER,
         allowNull: false
-        // field: 'user_id'
       },
       status: {
         type: DataTypes.ENUM,
@@ -27,23 +25,27 @@ export const init = (sequelize: Sequelize) => {
       expiresAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        // field: 'expires_at'
         get() {
           const expiresAt = this.getDataValue('expiresAt');
           return expiresAt.toISOString();
         }
       },
+      version: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+      },
       ticketId: {
         type: DataTypes.INTEGER,
         allowNull: false
-        // field: 'ticket_id'
       },
       createdAt: DataTypes.DATE,
       updatedAt: DataTypes.DATE
     },
     {
       sequelize,
-      tableName: 'order'
+      tableName: 'order',
+      version: true
     }
   );
 };

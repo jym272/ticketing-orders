@@ -10,7 +10,7 @@ export class Order extends Model<InferAttributes<Order>, InferCreationAttributes
   declare expiresAt: Date;
   declare ticketId: ForeignKey<Ticket['id']>;
   declare ticket?: NonAttribute<Ticket>;
-
+  declare version: CreationOptional<number>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }

@@ -71,7 +71,7 @@ export const updateTicketListener = async (m: JsMsg) => {
   try {
     const data = JSON.parse(sc.decode(m.data)) as Record<TicketSubjects, Ticket | undefined>;
     ticket = data[subjects.TicketUpdated];
-    if (!ticket) throw new Error(`Ticket not found in message data with subject ${subjects.TicketUpdated}`);
+    if (!ticket) throw new Error(`Ticket not found in message data with subject ${m.subject}`);
   } catch (e) {
     log('Error parsing message data', e);
     m.term();

@@ -2,7 +2,12 @@ import { initializeSetup, startSetup } from './setup';
 import { utils } from '@jym272ticketing/common';
 const { log, successConnectionMsg } = utils;
 import { getEnvOrFail, rocketEmoji } from '@utils/index';
-import { createTicketListener, updateTicketListener, expirationCompleteListener } from '@events/index';
+import {
+  createTicketListener,
+  paymentCreatedListener,
+  updateTicketListener,
+  expirationCompleteListener
+} from '@events/index';
 import { nc, startJetStream, Streams, subjects, subscribe } from '@jym272ticketing/common/dist/events';
 
 const { server } = initializeSetup();
@@ -12,7 +17,7 @@ const PORT = getEnvOrFail('PORT');
 void (async () => {
   try {
     await startJetStream({
-      streams: [Streams.ORDERS, Streams.TICKETS, Streams.EXPIRATION],
+      streams: [Streams.ORDERS, Streams.TICKETS, Streams.EXPIRATION, Streams.PAYMENTS],
       nats: {
         url: `nats://${getEnvOrFail('NATS_SERVER_HOST')}:${getEnvOrFail('NATS_SERVER_PORT')}`
       }
@@ -23,6 +28,7 @@ void (async () => {
     void subscribe(subjects.TicketCreated, createTicketListener);
     void subscribe(subjects.TicketUpdated, updateTicketListener);
     void subscribe(subjects.ExpirationComplete, expirationCompleteListener);
+    void subscribe(subjects.PaymentCreated, paymentCreatedListener);
   } catch (error) {
     log(error);
     process.exitCode = 1;

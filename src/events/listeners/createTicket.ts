@@ -1,11 +1,10 @@
 import { JsMsg } from 'nats';
 import { Ticket } from '@db/models';
-import { log, getEnvOrFail } from '@jym272ticketing/common/dist/utils';
+import { log } from '@jym272ticketing/common/dist/utils';
 import { getSequelizeClient } from '@db/sequelize';
-import { sc, subjects, TicketSubjects } from '@jym272ticketing/common/dist/events';
+import { nakTheMsg, sc, subjects, TicketSubjects } from '@jym272ticketing/common/dist/events';
 
 const sequelize = getSequelizeClient();
-const nackDelay = getEnvOrFail('NACK_DELAY_MS');
 
 const createTicket = async (m: JsMsg, ticket: Ticket) => {
   m.working();
@@ -24,8 +23,7 @@ const createTicket = async (m: JsMsg, ticket: Ticket) => {
     }
   } catch (err) {
     log('Error processing ticket', err);
-    m.nak(Number(nackDelay));
-    return;
+    return nakTheMsg(m);
   }
   try {
     await sequelize.transaction(async () => {
@@ -41,8 +39,7 @@ const createTicket = async (m: JsMsg, ticket: Ticket) => {
     });
   } catch (e) {
     log('Error creating ticket', e);
-    m.nak(Number(nackDelay));
-    return;
+    return nakTheMsg(m);
   }
 };
 

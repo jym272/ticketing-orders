@@ -43,7 +43,7 @@ export const cancelOrderController = () => {
     try {
       order.set({ status: OrderStatus.Cancelled });
       await order.save();
-      const pa = await publish(order, subjects.OrderCancelled);
+      const pa = await publish(order, subjects.OrderUpdated);
       seq = pa.seq;
       return res.status(OK).json({ order, seq, message: 'Order cancelled.' });
     } catch (err) {

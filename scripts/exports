@@ -17,10 +17,14 @@ export NODE_ENV=test
 export PASSWORD_PEPPER=$random_pepper
 export PORT=$port
 
+#docker
+export COMPOSE_PROJECT_NAME=orders-api-test
+
 #nats
+export NACK_DELAY_MS=1000
+export NACK_MAX_RETRIES=3
 export NATS_SERVER_HOST=localhost
 export NATS_SERVER_PORT=$nats_server_port
-export NACK_DELAY_MS=1000
 
 #postgres
 export POSTGRES_DB=orders
@@ -28,6 +32,3 @@ export POSTGRES_HOST=localhost
 export POSTGRES_PASSWORD=123456
 export POSTGRES_PORT=$postgres_port
 export POSTGRES_USER=jorge
-
-#docker
-export COMPOSE_PROJECT_NAME=orders-api-test

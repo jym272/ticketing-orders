@@ -111,16 +111,16 @@ test.describe('routes: /api/orders/:id PATCH cancelOrderController user ownershi
     expect(ticket?.title).toBe(ticketA.title);
 
     /*Testing the publish Event*/
-    const seqData = await getSequenceDataFromNats<{ [OrderSubjects.OrderCancelled]: Order }>(Streams.ORDERS, seq);
+    const seqData = await getSequenceDataFromNats<{ [OrderSubjects.OrderUpdated]: Order }>(Streams.ORDERS, seq);
     expect(seqData).toBeDefined();
-    expect(seqData).toHaveProperty('subject', OrderSubjects.OrderCancelled);
+    expect(seqData).toHaveProperty('subject', OrderSubjects.OrderUpdated);
     expect(seqData).toHaveProperty('seq', seq);
     expect(seqData).toHaveProperty('data');
     expect(seqData).toHaveProperty('time'); //of the nats server arrival
 
     /*Comparing the order with the one in the publish event, this order is populated with the ticket*/
-    expect(seqData.data[OrderSubjects.OrderCancelled]).toBeDefined();
-    const seqDataOrder = seqData.data[OrderSubjects.OrderCancelled];
+    expect(seqData.data[OrderSubjects.OrderUpdated]).toBeDefined();
+    const seqDataOrder = seqData.data[OrderSubjects.OrderUpdated];
 
     expect(seqDataOrder).toHaveProperty('id', order.id);
     expect(seqDataOrder).toHaveProperty('userId', order.userId);

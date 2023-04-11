@@ -1,11 +1,10 @@
 import { JsMsg } from 'nats';
 import { Order } from '@db/models';
-import { getEnvOrFail, log, OrderStatus } from '@jym272ticketing/common/dist/utils';
+import { log, OrderStatus } from '@jym272ticketing/common/dist/utils';
 import { getSequelizeClient } from '@db/sequelize';
-import { ExpirationSubjects, publish, sc, subjects } from '@jym272ticketing/common/dist/events';
+import { ExpirationSubjects, nakTheMsg, publish, sc, subjects } from '@jym272ticketing/common/dist/events';
 
 const sequelize = getSequelizeClient();
-const nackDelay = getEnvOrFail('NACK_DELAY_MS');
 
 const updateOrder = async (m: JsMsg, order: Order) => {
   m.working();
@@ -18,7 +17,12 @@ const updateOrder = async (m: JsMsg, order: Order) => {
     }
   } catch (err) {
     log('Error finding order', err);
-    return m.nak(Number(nackDelay));
+    return nakTheMsg(m);
+  }
+
+  if (foundOrder.status === OrderStatus.Complete) {
+    log('Order is already complete');
+    return m.term();
   }
 
   try {
@@ -27,13 +31,12 @@ const updateOrder = async (m: JsMsg, order: Order) => {
       const order = foundOrder!;
       order.status = OrderStatus.Cancelled;
       await order.save();
-      await publish(order, subjects.OrderCancelled);
+      await publish(order, subjects.OrderUpdated);
       m.ack();
     });
   } catch (err) {
     log('Error updating/cancelling order', err);
-    m.nak(Number(nackDelay));
-    return;
+    return nakTheMsg(m);
   }
 };
 

@@ -38,24 +38,24 @@ test.describe('routes: /api/orders GET getOrdersController 3 tickets 2 owners', 
   test.beforeAll(async () => {
     await truncateTables('ticket', 'order');
     /*Tickets*/
-    ticketA = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
-    ticketB = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
-    ticketC = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
+    ticketA = await insertIntoTableWithReturnJson<Ticket>('ticket', { version: 0, ...generateTicketAttributes() });
+    ticketB = await insertIntoTableWithReturnJson<Ticket>('ticket', { version: 0, ...generateTicketAttributes() });
+    ticketC = await insertIntoTableWithReturnJson<Ticket>('ticket', { version: 0, ...generateTicketAttributes() });
 
     /*Orders*/
-    orderA = await insertIntoTableWithReturnJson('order', {
+    orderA = await insertIntoTableWithReturnJson<Order>('order', {
       userId: user1.userId,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       ticketId: ticketA.id
     });
-    orderB = await insertIntoTableWithReturnJson('order', {
+    orderB = await insertIntoTableWithReturnJson<Order>('order', {
       userId: user2.userId,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       ticketId: ticketB.id
     });
-    orderC = await insertIntoTableWithReturnJson('order', {
+    orderC = await insertIntoTableWithReturnJson<Order>('order', {
       userId: user2.userId,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       ticketId: ticketC.id
     });
   });

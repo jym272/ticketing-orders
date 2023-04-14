@@ -69,10 +69,10 @@ test.describe('routes: /api/orders/:id PATCH cancelOrderController valid/invalid
 test.describe('routes: /api/orders/:id PATCH cancelOrderController user ownership of order', () => {
   test.beforeAll(async () => {
     await truncateTables('ticket', 'order');
-    ticketA = await insertIntoTableWithReturnJson('ticket', { ...generateTicketAttributes(), version: 0 });
-    orderFromUser1 = await insertIntoTableWithReturnJson('order', {
+    ticketA = await insertIntoTableWithReturnJson<Ticket>('ticket', { ...generateTicketAttributes(), version: 0 });
+    orderFromUser1 = await insertIntoTableWithReturnJson<Order>('order', {
       userId: user1.userId,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       ticketId: ticketA.id
     });
   });

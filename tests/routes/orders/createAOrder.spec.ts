@@ -90,7 +90,7 @@ test.describe('routes: /api/orders POST createAOrderController ticket exists, an
   let ticket: Ticket;
   test.beforeAll(async () => {
     await truncateTables('ticket', 'order');
-    ticket = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
+    ticket = await insertIntoTableWithReturnJson<Ticket>('ticket', { version: 0, ...generateTicketAttributes() });
     await insertIntoTableWithReturnJson('order', {
       userId: user1.userId,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
@@ -113,7 +113,7 @@ test.describe('routes: /api/orders POST createAOrderController', () => {
   let ticket: Ticket;
   test.beforeAll(async () => {
     await truncateTables('ticket', 'order');
-    ticket = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
+    ticket = await insertIntoTableWithReturnJson<Ticket>('ticket', { version: 0, ...generateTicketAttributes() });
   });
 
   test('failed because of userId invalid in cookie', async ({ request }) => {
@@ -140,6 +140,7 @@ test.describe('routes: /api/orders POST createAOrderController', () => {
     expect(message).toBe('Order created.');
     expect(response.status()).toBe(CREATED);
     expect(seq).toBeGreaterThan(0);
+
     // Order
     expect(order).toBeDefined();
     expect(order).toHaveProperty('id');
@@ -149,6 +150,11 @@ test.describe('routes: /api/orders POST createAOrderController', () => {
     expect(order).toHaveProperty('expiresAt');
     expect(order).toHaveProperty('updatedAt');
     expect(order).toHaveProperty('createdAt');
+    expect(order).toHaveProperty('ticket');
+    expect(order.ticket).toBeDefined();
+    expect(order.ticket).toHaveProperty('id', ticket.id);
+    expect(order.ticket).toHaveProperty('title', ticket.title);
+    expect(order.ticket).toHaveProperty('price', ticket.price);
 
     /*Testing the publish Event*/
     const seqData = await getSequenceDataFromNats<{ [OrderSubjects.OrderCreated]: Order }>(Streams.ORDERS, seq);
@@ -169,5 +175,10 @@ test.describe('routes: /api/orders POST createAOrderController', () => {
     expect(seqDataOrder).toHaveProperty('expiresAt', order.expiresAt);
     expect(seqDataOrder).toHaveProperty('updatedAt', order.updatedAt);
     expect(seqDataOrder).toHaveProperty('createdAt', order.createdAt);
+    expect(seqDataOrder).toHaveProperty('ticket');
+    expect(seqDataOrder.ticket).toBeDefined();
+    expect(seqDataOrder.ticket).toHaveProperty('id', order.ticket?.id);
+    expect(seqDataOrder.ticket).toHaveProperty('title', order.ticket?.title);
+    expect(seqDataOrder.ticket).toHaveProperty('price', order.ticket?.price);
   });
 });

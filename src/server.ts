@@ -15,8 +15,14 @@ const { server } = initializeSetup();
 const PORT = getEnvOrFail('PORT');
 
 void (async () => {
+  const queueGroupName = 'orders-service';
   try {
     await startJetStream({
+      queueGroupName,
+      // ->All streams in the list are created with subj: stream.*
+      // ->To publish to orders.* it must exist the stream orders -> the consumer for this stream are not necceary
+      // this api doesnt subscribe to itlsef ??? but those conmusers are created nonetheless
+      // ->To subscribe to the subjects tickets.create ........ The consumers are created with a binding durable name
       streams: [Streams.ORDERS, Streams.TICKETS, Streams.EXPIRATION, Streams.PAYMENTS],
       nats: {
         url: `nats://${getEnvOrFail('NATS_SERVER_HOST')}:${getEnvOrFail('NATS_SERVER_PORT')}`
@@ -25,10 +31,10 @@ void (async () => {
     await startSetup(server);
     server.listen(PORT, () => successConnectionMsg(`${rocketEmoji} Server is running on port ${PORT}`));
     // TODO: logs red and green and yellow with chalk
-    void subscribe(subjects.TicketCreated, createTicketListener);
-    void subscribe(subjects.TicketUpdated, updateTicketListener);
-    void subscribe(subjects.ExpirationComplete, expirationCompleteListener);
-    void subscribe(subjects.PaymentCreated, paymentCreatedListener);
+    void subscribe(subjects.TicketCreated, queueGroupName, createTicketListener);
+    void subscribe(subjects.TicketUpdated, queueGroupName, updateTicketListener);
+    void subscribe(subjects.ExpirationComplete, queueGroupName, expirationCompleteListener);
+    void subscribe(subjects.PaymentCreated, queueGroupName, paymentCreatedListener);
   } catch (error) {
     log(error);
     process.exitCode = 1;

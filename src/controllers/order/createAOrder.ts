@@ -45,9 +45,19 @@ export const createAOrderController = () => {
           expiresAt: expiration,
           ticketId: ticket.id
         });
-        const pa = await publish(order, subjects.OrderCreated);
+
+        const orderWithTicket = await Order.findByPk(order.id, {
+          include: [
+            {
+              model: Ticket,
+              as: 'ticket'
+            }
+          ]
+        });
+
+        const pa = await publish(orderWithTicket, subjects.OrderCreated);
         seq = pa.seq; // The sequence number of the message as stored in JetStream
-        return order;
+        return orderWithTicket;
       });
       return res.status(CREATED).json({ message: 'Order created.', order: newOrder, seq });
     } catch (err) {

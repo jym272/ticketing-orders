@@ -37,14 +37,13 @@ test.describe('listener: paymentCreated', () => {
 
   test.beforeAll(async () => {
     await truncateTables('ticket', 'order');
-    ticket = await insertIntoTableWithReturnJson('ticket', { version: 0, ...generateTicketAttributes() });
+    ticket = await insertIntoTableWithReturnJson<Ticket>('ticket', { version: 0, ...generateTicketAttributes() });
     const expiration = new Date();
     expiration.setSeconds(expiration.getSeconds() + EXPIRATION_ORDER_MINUTES * 60);
-    const expirationString = expiration.toISOString();
-    order = await insertIntoTableWithReturnJson('order', {
+    order = await insertIntoTableWithReturnJson<Order>('order', {
       ticketId: ticket.id,
       userId: user1.userId,
-      expiresAt: expirationString
+      expiresAt: expiration
     });
   });
 

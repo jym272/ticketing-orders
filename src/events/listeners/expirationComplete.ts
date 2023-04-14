@@ -10,7 +10,6 @@ const updateOrder = async (m: JsMsg, order: Order) => {
   m.working();
   let foundOrder: Order | null;
   try {
-    // include ticket as ticket
     foundOrder = await Order.findByPk(order.id, {
       include: [
         {

@@ -1,5 +1,5 @@
 import { JsMsg } from 'nats';
-import { Order } from '@db/models';
+import { Order, Ticket } from '@db/models';
 import { log, OrderStatus } from '@jym272ticketing/common/dist/utils';
 import { getSequelizeClient } from '@db/sequelize';
 import { ExpirationSubjects, nakTheMsg, publish, sc, subjects } from '@jym272ticketing/common/dist/events';
@@ -10,7 +10,15 @@ const updateOrder = async (m: JsMsg, order: Order) => {
   m.working();
   let foundOrder: Order | null;
   try {
-    foundOrder = await Order.findByPk(order.id);
+    // include ticket as ticket
+    foundOrder = await Order.findByPk(order.id, {
+      include: [
+        {
+          model: Ticket,
+          as: 'ticket'
+        }
+      ]
+    });
     if (!foundOrder) {
       log('Order does not exist');
       return m.term();

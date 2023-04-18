@@ -24,6 +24,8 @@ export const createAOrderController = () => {
     const reservedOrders = await ticket.getReservedOrders();
 
     if (isReserved || reservedOrders.length > 0) {
+      //TODO: The order is reserved if is not cancelled -> is cancelled if is was created and the expiration time has passed
+      //TODO: also is reserved if the Order is complete (paid) > In the Ticket Api the Ticket modal has a userId
       return throwError(
         'Ticket is already reserved.',
         BAD_REQUEST,

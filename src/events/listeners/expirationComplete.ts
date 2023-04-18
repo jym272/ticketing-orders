@@ -28,7 +28,7 @@ const updateOrder = async (m: JsMsg, order: Order) => {
   }
 
   if (foundOrder.status === OrderStatus.Complete) {
-    log('Order is already complete');
+    log('Order is already complete, cannot be cancelled');
     return m.term();
   }
 

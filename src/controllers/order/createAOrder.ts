@@ -6,7 +6,7 @@ const { httpStatusCodes, throwError, parseSequelizeError } = utils;
 const { CREATED, BAD_REQUEST, INTERNAL_SERVER_ERROR } = httpStatusCodes;
 const sequelize = getSequelizeClient();
 
-const EXPIRATION_ORDER_MINUTES = 15;
+const EXPIRATION_ORDER_MINUTES = 1;
 
 export const createAOrderController = () => {
   return async (req: Request, res: Response) => {

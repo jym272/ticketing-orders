@@ -112,7 +112,7 @@ test.describe('listener: expirationComplete but the order is already complete', 
     }
     const { status } = JSON.parse(res) as Order;
     expect(status).not.toBe(OrderStatus.Cancelled);
-    expect(status).toBe(OrderStatus.Complete);
+    expect(status).toBe(OrderStatus.Cancelled);
     // because the order update is in a transaction with the publish method
     // It also proves that the event "orders.updated" has been published,
   });

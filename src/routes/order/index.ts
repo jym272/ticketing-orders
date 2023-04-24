@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { orderController } from '@controllers/order';
 import { commonController } from '@jym272ticketing/common';
-import { getEnvOrFail } from '@utils/env';
+import { getEnvOrFail } from '@jym272ticketing/common/dist/utils';
 const { verifyCurrentUser, requireAuth } = commonController;
 const { createAOrder, getOrders, getOrder, cancelOrder } = orderController;
 

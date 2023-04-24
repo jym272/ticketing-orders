@@ -12,6 +12,7 @@ random_secret=$(get_random_secret)
 nats_server_port=$(get_random_port_not_used)
 
 #app
+export EXPIRATION_ORDER_MINUTES=1
 export JWT_SECRET=$random_secret
 export NODE_ENV=test
 export PASSWORD_PEPPER=$random_pepper

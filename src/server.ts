@@ -1,7 +1,6 @@
 import { initializeSetup, startSetup } from './setup';
 import { utils } from '@jym272ticketing/common';
-const { log, successConnectionMsg } = utils;
-import { getEnvOrFail, rocketEmoji } from '@utils/index';
+const { log, successConnectionMsg, getEnvOrFail, rocketEmoji } = utils;
 import {
   createTicketListener,
   paymentCreatedListener,

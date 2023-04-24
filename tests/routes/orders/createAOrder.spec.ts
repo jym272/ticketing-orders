@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { utils, events } from '@jym272ticketing/common';
-import { TICKET_ATTRIBUTES } from '@utils/index';
 import { Order, Ticket } from '@db/models';
+import { TICKET_ATTRIBUTES } from '@jym272ticketing/common/dist/utils';
 const { OrderSubjects, Streams } = events;
 
 const {

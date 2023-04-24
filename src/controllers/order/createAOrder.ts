@@ -2,11 +2,11 @@ import { Request, Response } from 'express';
 import { getSequelizeClient, Order, Ticket } from '@db/index';
 import { utils } from '@jym272ticketing/common';
 import { publish, subjects } from '@jym272ticketing/common/dist/events';
-const { httpStatusCodes, throwError, parseSequelizeError } = utils;
+const { httpStatusCodes, throwError, parseSequelizeError, getEnvOrFail } = utils;
 const { CREATED, BAD_REQUEST, INTERNAL_SERVER_ERROR } = httpStatusCodes;
 const sequelize = getSequelizeClient();
 
-const EXPIRATION_ORDER_MINUTES = 1;
+const EXPIRATION_ORDER_MINUTES = Number(getEnvOrFail('EXPIRATION_ORDER_MINUTES'));
 
 export const createAOrderController = () => {
   return async (req: Request, res: Response) => {

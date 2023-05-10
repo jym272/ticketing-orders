@@ -12,7 +12,7 @@ import { nc, startJetStream, Streams, subjects, subscribe } from '@jym272ticketi
 const { server } = initializeSetup();
 
 const PORT = getEnvOrFail('PORT');
-
+//
 void (async () => {
   const queueGroupName = 'orders-service';
   try {

@@ -8,46 +8,38 @@ const sequelize = getSequelizeClient();
 
 const updateTicket = async (m: JsMsg, ticket: Ticket) => {
   m.working();
-  let tk: Ticket | null;
-  try {
-    tk = await Ticket.findByPk(ticket.id, { attributes: ['version'] });
-    if (!tk) {
-      log("Ticket does not exist, maybe isn't created yet");
-      return nakTheMsg(m);
-    }
-  } catch (err) {
-    log('Error processing ticket', err);
-    return nakTheMsg(m);
-  }
-
-  if (tk.version >= ticket.version) {
-    log('TK', 'Ticket version is not greater than the one in the DB');
-    m.term();
-    return;
-  }
-  if (tk.version + 1 !== ticket.version) {
-    log('TK', 'Ticket version is not consecutive, maybe a version was not processed yet');
-    return nakTheMsg(m);
-  }
 
   try {
-    await sequelize.transaction(async () => {
-      /*const updatedTicket =*/ await Ticket.update(
-        {
-          title: ticket.title,
-          price: ticket.price,
-          version: ticket.version
-        },
-        {
-          where: {
-            id: ticket.id,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- it is not null but the transaction does not assume it
-            version: tk!.version
-          }
-        }
-      );
-      // const pa = await publish(order, subjects.OrderCreated); TODO: publish to the interested, it must be in the transaction
-      // seq = pa.seq; // The sequence number of the message as stored in JetStream
+    await sequelize.transaction(async ticket_t => {
+      const tk = await Ticket.findByPk(ticket.id, {
+        transaction: ticket_t,
+        lock: true
+      });
+      if (!tk) {
+        log("Ticket does not exist, maybe isn't created yet", { ticket });
+        return nakTheMsg(m);
+      }
+
+      if (tk.version >= ticket.version) {
+        log('Ticket version is not greater than the one in the DB', {
+          id: ticket.id,
+          version: ticket.version,
+          version_db: tk.version
+        });
+        m.term();
+        return;
+      }
+      if (tk.version + 1 !== ticket.version) {
+        log('Ticket version is not consecutive, maybe a version was not processed yet', {
+          id: ticket.id,
+          version: ticket.version,
+          version_db: tk.version
+        });
+        return nakTheMsg(m);
+      }
+      await tk.set({ title: ticket.title, price: ticket.price, version: ticket.version }).save({
+        transaction: ticket_t
+      });
       m.ack();
     });
   } catch (err) {

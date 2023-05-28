@@ -9,32 +9,35 @@ const sequelize = getSequelizeClient();
 const createTicket = async (m: JsMsg, ticket: Ticket) => {
   m.working();
   if (ticket.version !== 0) {
-    // TODO: error LOG
     log('Ticket version is not 0');
     m.term();
     return;
   }
+
   try {
-    const tk = await Ticket.findByPk(ticket.id, { attributes: ['id'] });
-    if (tk) {
-      log('Ticket already exists, did you mean to update it?');
-      m.term();
-      return;
-    }
-  } catch (err) {
-    log('Error processing ticket', err);
-    return nakTheMsg(m);
-  }
-  try {
-    await sequelize.transaction(async () => {
-      /*const newTicket =*/ await Ticket.create({
-        id: ticket.id,
-        title: ticket.title,
-        price: ticket.price,
-        version: ticket.version
+    await sequelize.transaction(async ticket_t => {
+      const tk = await Ticket.findByPk(ticket.id, {
+        attributes: ['id'],
+        lock: true,
+        transaction: ticket_t
       });
-      // const pa = await publish(order, subjects.OrderCreated); TODO: publish to the interested, it must be in the transaction
-      // seq = pa.seq; // The sequence number of the message as stored in JetStream
+      if (tk) {
+        log('Ticket already exists, did you mean to update it?');
+        m.term();
+        return;
+      }
+      await Ticket.create(
+        {
+          id: ticket.id,
+          title: ticket.title,
+          price: ticket.price,
+          version: ticket.version
+        },
+        {
+          transaction: ticket_t,
+          lock: true
+        }
+      );
       m.ack();
     });
   } catch (e) {
